@@ -8,7 +8,7 @@
     var RTCPeerConnection=null,getUserMedia=null,attachMediaStream=null,reattachMediaStream=null,webrtcDetectedBrowser=null;navigator.mozGetUserMedia?(console.log("This appears to be Firefox"),webrtcDetectedBrowser="firefox",RTCPeerConnection=mozRTCPeerConnection,RTCSessionDescription=mozRTCSessionDescription,RTCIceCandidate=mozRTCIceCandidate,getUserMedia=navigator.mozGetUserMedia.bind(navigator),attachMediaStream=function(e,t){console.log("Attaching media stream"),e.mozSrcObject=t,e.play()},reattachMediaStream=function(e,t){console.log("Reattaching media stream"),e.mozSrcObject=t.mozSrcObject,e.play()},MediaStream.prototype.getVideoTracks=function(){return[]},MediaStream.prototype.getAudioTracks=function(){return[]}):navigator.webkitGetUserMedia?(console.log("This appears to be Chrome"),webrtcDetectedBrowser="chrome",RTCPeerConnection=webkitRTCPeerConnection,getUserMedia=navigator.webkitGetUserMedia.bind(navigator),attachMediaStream=function(e,t){try{e.srcObject=t}catch(o){e.src=window.URL.createObjectURL(t)}},reattachMediaStream=function(e,t){e.src=t.src},webkitMediaStream.prototype.getVideoTracks||(webkitMediaStream.prototype.getVideoTracks=function(){return this.videoTracks},webkitMediaStream.prototype.getAudioTracks=function(){return this.audioTracks}),webkitRTCPeerConnection.prototype.getLocalStreams||(webkitRTCPeerConnection.prototype.getLocalStreams=function(){return this.localStreams},webkitRTCPeerConnection.prototype.getRemoteStreams=function(){return this.remoteStreams})):console.log("Browser does not appear to be WebRTC-capable");
     </script>
     <!-- <script src="js/jquery-2.0.0.js"></script> -->
-    <script src="https://code.jquery.com/jquery-3.4.1.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>    
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
     <!-- <script src="js/bootstrap.js"></script> -->
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
     <!-- <link href="css/bootstrap.css" rel="stylesheet"> -->
@@ -41,14 +41,11 @@
   <input type="file" id="fileBtn">
 </div>
 
-<div class="modal" tabindex="-1" role="dialog" id="showLocalOffer">
+<div class="modal" tabindex="-1" role="dialog" id="showLocalOffer" data-backdrop="static" data-keyboard="false">
     <div class="modal-dialog" role="document">
       <div class="modal-content">
         <div class="modal-header">
           <h5 class="modal-title">Send your local offer to someone else</h5>
-          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-            <span aria-hidden="true">&times;</span>
-          </button>
         </div>
         <div class="modal-body">
           <p>Here's your "offer" -- it tells someone else how to connect to you.  Send the whole thing to them, for example in an instant message or e-mail...</p>
@@ -62,14 +59,11 @@
     </div>
   </div>
 
-<div class="modal" tabindex="-1" role="dialog" id="showLocalAnswer">
+<div class="modal" tabindex="-1" role="dialog" id="showLocalAnswer" data-backdrop="static" data-keyboard="false">
     <div class="modal-dialog" role="document">
       <div class="modal-content">
         <div class="modal-header">
           <h5 class="modal-title">Send your local answer to someone else</h5>
-          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-            <span aria-hidden="true">&times;</span>
-          </button>
         </div>
         <div class="modal-body">
           <p>Here's your "answer" -- it tells someone else how to connect to you.  Send the whole thing to them, for example in an instant message or e-mail.</p>
@@ -83,14 +77,11 @@
     </div>
   </div>
 
-<div class="modal" tabindex="-1" role="dialog" id="getRemoteOffer">
+<div class="modal" tabindex="-1" role="dialog" id="getRemoteOffer" data-backdrop="static" data-keyboard="false">
     <div class="modal-dialog" role="document">
       <div class="modal-content">
         <div class="modal-header">
           <h5 class="modal-title">Paste the "offer" you received</h5>
-          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-            <span aria-hidden="true">&times;</span>
-          </button>
         </div>
         <div class="modal-body">
           <p>The person who created the room will send you an "offer" string -- paste it here.</p>
@@ -104,14 +95,11 @@
     </div>
   </div>
 
-<div class="modal" tabindex="-1" id="getRemoteAnswer" role="dialog">
+<div class="modal" tabindex="-1" id="getRemoteAnswer" role="dialog" data-backdrop="static" data-keyboard="false">
     <div class="modal-dialog" role="document">
       <div class="modal-content">
         <div class="modal-header">
           <h5 class="modal-title">Paste the "answer" you received</h5>
-          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-            <span aria-hidden="true">&times;</span>
-          </button>
         </div>
         <div class="modal-body">
           <p>Now paste in the "answer" that was sent back to you.</p>
@@ -119,20 +107,17 @@
           <textarea id="remoteAnswer" name="remoteAnswer" class="form-control" rows="11" placeholder="Paste here..." ></textarea>
         </div>
         <div class="modal-footer">
-          <button class="btn btn-primary" id="answerRecdBtn" data-dismiss="modal">Okay, I pasted it.</button>        
+          <button class="btn btn-primary" id="answerRecdBtn" data-dismiss="modal">Okay, I pasted it.</button>
         </div>
       </div>
     </div>
   </div>
 
-<div class="modal" tabindex="-1" role="dialog" id="waitForConnection">
+<div class="modal" tabindex="-1" role="dialog" id="waitForConnection" data-backdrop="static" data-keyboard="false">
     <div class="modal-dialog" role="document">
       <div class="modal-content">
         <div class="modal-header">
           <h5 class="modal-title">Waiting for connection</h5>
-          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-            <span aria-hidden="true">&times;</span>
-          </button>
         </div>
         <div class="modal-body">
           <p>This dialog will disappear when a connection is made.</p>
@@ -174,7 +159,7 @@
               </g>
           </svg>
             </div>
-        </div>          
+        </div>
         </div>
       </div>
     </div>
@@ -182,18 +167,15 @@
 
 
 
-<div class="modal" tabindex="-1" role="dialog" id="createOrJoin">
+<div class="modal" tabindex="-1" role="dialog" id="createOrJoin" data-backdrop="static" data-keyboard="false">
     <div class="modal-dialog" role="document">
       <div class="modal-content">
         <div class="modal-header">
           <h5 class="modal-title">Create or join a room?</h5>
-          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-            <span aria-hidden="true">&times;</span>
-          </button>
         </div>
         <div class="modal-footer">
           <button class="btn" id="joinBtn" data-dismiss="modal">Join</button>
-          <button class="btn btn-primary" id="createBtn" data-dismiss="modal">Create</button>          
+          <button class="btn btn-primary" id="createBtn" data-dismiss="modal">Create</button>
         </div>
       </div>
     </div>
