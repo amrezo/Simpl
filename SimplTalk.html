@@ -1,0 +1,208 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>SimplTalk</title>
+    <!-- <script src="adapter.js"></script> -->
+    <script>
+    var RTCPeerConnection=null,getUserMedia=null,attachMediaStream=null,reattachMediaStream=null,webrtcDetectedBrowser=null;navigator.mozGetUserMedia?(console.log("This appears to be Firefox"),webrtcDetectedBrowser="firefox",RTCPeerConnection=mozRTCPeerConnection,RTCSessionDescription=mozRTCSessionDescription,RTCIceCandidate=mozRTCIceCandidate,getUserMedia=navigator.mozGetUserMedia.bind(navigator),attachMediaStream=function(e,t){console.log("Attaching media stream"),e.mozSrcObject=t,e.play()},reattachMediaStream=function(e,t){console.log("Reattaching media stream"),e.mozSrcObject=t.mozSrcObject,e.play()},MediaStream.prototype.getVideoTracks=function(){return[]},MediaStream.prototype.getAudioTracks=function(){return[]}):navigator.webkitGetUserMedia?(console.log("This appears to be Chrome"),webrtcDetectedBrowser="chrome",RTCPeerConnection=webkitRTCPeerConnection,getUserMedia=navigator.webkitGetUserMedia.bind(navigator),attachMediaStream=function(e,t){try{e.srcObject=t}catch(o){e.src=window.URL.createObjectURL(t)}},reattachMediaStream=function(e,t){e.src=t.src},webkitMediaStream.prototype.getVideoTracks||(webkitMediaStream.prototype.getVideoTracks=function(){return this.videoTracks},webkitMediaStream.prototype.getAudioTracks=function(){return this.audioTracks}),webkitRTCPeerConnection.prototype.getLocalStreams||(webkitRTCPeerConnection.prototype.getLocalStreams=function(){return this.localStreams},webkitRTCPeerConnection.prototype.getRemoteStreams=function(){return this.remoteStreams})):console.log("Browser does not appear to be WebRTC-capable");
+    </script>
+    <!-- <script src="js/jquery-2.0.0.js"></script> -->
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>    
+    <!-- <script src="js/bootstrap.js"></script> -->
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+    <!-- <link href="css/bootstrap.css" rel="stylesheet"> -->
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <!-- <link href="css/bootstrap-responsive.css" rel="stylesheet"> -->
+    <!-- <link href="css/serverless-webrtc-bootstrap.css" rel="stylesheet"> -->
+    <style>
+      textarea { resize:none; }
+      #remoteVideo { height: 100vh; min-height: 100%; width: 100%; object-fit: cover; position: absolute; top: 0; left: 0;}
+      #localVideo { height: 25vh; position: absolute; bottom: 1rem; right: 1rem; z-index: 10;}
+
+    </style>
+</head>
+<body>
+<div class="localVideoDiv">
+  <Video id="localVideo">
+</div>
+<div class="remoteVideoDiv">
+  <Video id="remoteVideo">
+</div>
+<div class="span4" hidden>
+  <fieldset class="well">
+    <div class="bg-dark text-white" id="chatlog" style="height:350px; overflow:auto;">
+    </div>
+  </fieldset>
+  <form class="form-inline" onSubmit="return sendMessage()" action="">
+    <input type="text" id="messageTextBox" placeholder="Type your message here">
+    <button type="submit" id="sendMessageBtn" class="btn">Send</button>
+  </form>
+  <input type="file" id="fileBtn">
+</div>
+
+<div class="modal" tabindex="-1" role="dialog" id="showLocalOffer">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Send your local offer to someone else</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <p>Here's your "offer" -- it tells someone else how to connect to you.  Send the whole thing to them, for example in an instant message or e-mail...</p>
+          <br />
+          <textarea id="localOffer" name="localOffer" class="form-control" rows="11" placeholder="Generating…" readonly></textarea>
+        </div>
+        <div class="modal-footer">
+          <button type="button" id="offerSentBtn" data-dismiss="modal" class="btn btn-primary">Okay, I sent it.</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<div class="modal" tabindex="-1" role="dialog" id="showLocalAnswer">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Send your local answer to someone else</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <p>Here's your "answer" -- it tells someone else how to connect to you.  Send the whole thing to them, for example in an instant message or e-mail.</p>
+          <br />
+          <textarea id="localAnswer" name="localAnswer" class="form-control" rows="11" placeholder="Generating…" readonly></textarea>
+        </div>
+        <div class="modal-footer">
+          <button type="button" id="answerSentBtn" data-dismiss="modal" class="btn btn-primary">Okay, I sent it.</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<div class="modal" tabindex="-1" role="dialog" id="getRemoteOffer">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Paste the "offer" you received</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <p>The person who created the room will send you an "offer" string -- paste it here.</p>
+          <br />
+          <textarea id="remoteOffer" name="remoteOffer" class="form-control" rows="11" placeholder="Paste here..."></textarea>
+        </div>
+        <div class="modal-footer">
+          <button type="button" id="offerRecdBtn" data-dismiss="modal" class="btn btn-primary">Okay, I pasted it.</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<div class="modal" tabindex="-1" id="getRemoteAnswer" role="dialog">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Paste the "answer" you received</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <p>Now paste in the "answer" that was sent back to you.</p>
+          <br />
+          <textarea id="remoteAnswer" name="remoteAnswer" class="form-control" rows="11" placeholder="Paste here..." ></textarea>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-primary" id="answerRecdBtn" data-dismiss="modal">Okay, I pasted it.</button>        
+        </div>
+      </div>
+    </div>
+  </div>
+
+<div class="modal" tabindex="-1" role="dialog" id="waitForConnection">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Waiting for connection</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <p>This dialog will disappear when a connection is made.</p>
+          <div class="spinner" align="center">
+            <svg width="100" height="100" viewBox="0 0 44 44" xmlns="http://www.w3.org/2000/svg" stroke="#000">
+              <g fill="none" fill-rule="evenodd" stroke-width="2">
+                  <circle cx="22" cy="22" r="1">
+                      <animate attributeName="r"
+                          begin="0s" dur="1.8s"
+                          values="1; 20"
+                          calcMode="spline"
+                          keyTimes="0; 1"
+                          keySplines="0.165, 0.84, 0.44, 1"
+                          repeatCount="indefinite" />
+                      <animate attributeName="stroke-opacity"
+                          begin="0s" dur="1.8s"
+                          values="1; 0"
+                          calcMode="spline"
+                          keyTimes="0; 1"
+                          keySplines="0.3, 0.61, 0.355, 1"
+                          repeatCount="indefinite" />
+                  </circle>
+                  <circle cx="22" cy="22" r="1">
+                      <animate attributeName="r"
+                          begin="-0.9s" dur="1.8s"
+                          values="1; 20"
+                          calcMode="spline"
+                          keyTimes="0; 1"
+                          keySplines="0.165, 0.84, 0.44, 1"
+                          repeatCount="indefinite" />
+                      <animate attributeName="stroke-opacity"
+                          begin="-0.9s" dur="1.8s"
+                          values="1; 0"
+                          calcMode="spline"
+                          keyTimes="0; 1"
+                          keySplines="0.3, 0.61, 0.355, 1"
+                          repeatCount="indefinite" />
+                  </circle>
+              </g>
+          </svg>
+            </div>
+        </div>          
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+
+<div class="modal" tabindex="-1" role="dialog" id="createOrJoin">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Create or join a room?</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-footer">
+          <button class="btn" id="joinBtn" data-dismiss="modal">Join</button>
+          <button class="btn btn-primary" id="createBtn" data-dismiss="modal">Create</button>          
+        </div>
+      </div>
+    </div>
+  </div>
+
+<!-- <script src="serverless-webrtc.js"></script>
+<script src="file-transfer.js"></script> -->
+<script>
+  function FileReceiver(){function e(e,c){if(moz)if(e.size){var i=new window.FileReader;i.readAsDataURL(e),i.onload=function(e){FileSaver.SaveToDisk(e.target.result,o),c.onFileReceived&&c.onFileReceived(o)}}else{var s=JSON.parse(e);s.fileName&&(o=s.fileName)}moz||(e.packets&&(a=t=parseInt(e.packets)),c.onFileProgress&&c.onFileProgress({remaining:t--,length:a,received:a-t}),n.push(e.message),e.last&&(FileSaver.SaveToDisk(n.join(""),e.name),c.onFileReceived&&c.onFileReceived(e.name),n=[]))}var n=[],o="",t=0,a=0;return{receive:e}}function fileSent(e){console.log(e+" sent")}function fileProgress(e){console.log(e+" progress")}function sendFile(e){e.size&&FileSender.send({file:e,onFileSent:fileSent,onFileProgress:fileProgress})}function sendMessage(){if($("#messageTextBox").val()){var e=new RTCMultiSession;writeToChatLog($("#messageTextBox").val(),"text-success"),e.send({message:$("#messageTextBox").val()}),$("#messageTextBox").val(""),$("#chatlog").scrollTop($("#chatlog")[0].scrollHeight)}return!1}function setupDC1(){try{var e=new FileReceiver;dc1=pc1.createDataChannel("test",{reliable:!0}),activedc=dc1,console.log("Created datachannel (pc1)"),dc1.onopen=function(e){console.log("data channel connect"),$("#waitForConnection").modal("hide"),$("#waitForConnection").remove()},dc1.onmessage=function(n){if(console.log("Got message (pc1)",n.data),n.data.size)e.receive(n.data,{});else{if(2==n.data.charCodeAt(0))return;console.log(n);var o=JSON.parse(n.data);"file"===o.type?e.receive(n.data,{}):(writeToChatLog(o.message,"text-info"),$("#chatlog").scrollTop($("#chatlog")[0].scrollHeight))}}}catch(e){console.warn("No data channel (pc1)",e)}}function createLocalOffer(){console.log("video1"),navigator.getUserMedia=navigator.getUserMedia||navigator.webkitGetUserMedia||navigator.mozGetUserMedia||navigator.msGetUserMedia,navigator.getUserMedia({video:!0,audio:!0},function(e){var n=document.getElementById("localVideo");try{n.srcObject=e}catch(o){n.src=window.URL.createObjectURL(e)}n.play(),pc1.addStream(e),console.log(e),console.log("adding stream to pc1"),setupDC1(),pc1.createOffer(function(e){pc1.setLocalDescription(e,function(){},function(){}),console.log("created local offer",e)},function(){console.warn("Couldn't create offer")},sdpConstraints)},function(e){console.log("Error adding stream to pc1: "+e)})}function handleOnaddstream(e){console.log("Got remote stream",e.stream);var n=document.getElementById("remoteVideo");n.autoplay=!0,attachMediaStream(n,e.stream)}function handleOnconnection(){console.log("Datachannel connected"),writeToChatLog("Datachannel connected","text-success"),$("#waitForConnection").modal("hide"),$("#waitForConnection").remove(),$("#showLocalAnswer").modal("hide"),$("#messageTextBox").focus()}function onsignalingstatechange(e){console.info("signaling state change:",e)}function oniceconnectionstatechange(e){console.info("ice connection state change:",e)}function onicegatheringstatechange(e){console.info("ice gathering state change:",e)}function handleAnswerFromPC2(e){console.log("Received remote answer: ",e),writeToChatLog("Received remote answer","text-success"),pc1.setRemoteDescription(e)}function handleCandidateFromPC2(e){pc1.addIceCandidate(e)}function handleOfferFromPC1(e){pc2.setRemoteDescription(e),pc2.createAnswer(function(e){writeToChatLog("Created local answer","text-success"),console.log("Created local answer: ",e),pc2.setLocalDescription(e)},function(){console.warn("Couldn't create offer")},sdpConstraints)}function handleCandidateFromPC1(e){pc2.addIceCandidate(e)}function getTimestamp(){var e=(new Date).getTime()/1e3,n=parseInt(e/3600)%24,o=parseInt(e/60)%60,t=parseInt(e%60);return(n<10?"0"+n:n)+":"+(o<10?"0"+o:o)+":"+(t<10?"0"+t:t)}function writeToChatLog(e,n){document.getElementById("chatlog").innerHTML+='<p class="'+n+'">['+getTimestamp()+"] "+e+"</p>"}window.moz=!!navigator.mozGetUserMedia;var RTCMultiSession=function(e){return{send:function(e){moz&&e.file?data=e.file:data=JSON.stringify(e),activedc.send(data)}}},FileSender={send:function(e){function n(a,l){var d={type:"file"};a&&(l=a.target.result,s=r=d.packets=parseInt(l.length/c)),e.onFileProgress&&e.onFileProgress({remaining:r--,length:s,sent:s-r}),l.length>c?d.message=l.slice(0,c):(d.message=l,d.last=!0,d.name=t.name,e.onFileSent&&e.onFileSent(t)),o.send(d),i=l.slice(d.message.length),i.length&&setTimeout(function(){n(null,i)},500)}var o=e.channel||new RTCMultiSession,t=e.file;if(moz&&(o.send({fileName:t.name,type:"file"}),o.send({file:t}),e.onFileSent&&e.onFileSent(t)),!moz){var a=new window.FileReader;a.readAsDataURL(t),a.onload=n}var c=1e3,i="",s=0,r=0}},FileSaver={SaveToDisk:function(e,n){var o=document.createElement("a");o.href=e,o.target="_blank",o.download=n||e;var t=new MouseEvent("click",{view:window,bubbles:!0,cancelable:!0});o.dispatchEvent(t),(window.URL||window.webkitURL).revokeObjectURL(o.href)}},cfg={iceServers:[{url:"stun:23.21.150.121"}]},con={optional:[{DtlsSrtpKeyAgreement:!0}]},pc1=new RTCPeerConnection(cfg,con),dc1=null,tn1=null,activedc,pc1icedone=!1,sdpConstraints={optional:[],mandatory:{OfferToReceiveAudio:!0,OfferToReceiveVideo:!0}};$("#showLocalOffer").modal("hide"),$("#getRemoteAnswer").modal("hide"),$("#waitForConnection").modal("hide"),$("#createOrJoin").modal("show"),$("#createBtn").click(function(){$("#createOrJoin").modal("hide"),$("#showLocalOffer").modal("show"),createLocalOffer()}),$("#joinBtn").click(function(){navigator.getUserMedia=navigator.getUserMedia||navigator.webkitGetUserMedia||navigator.mozGetUserMedia||navigator.msGetUserMedia,navigator.getUserMedia({video:!0,audio:!0},function(e){var n=document.getElementById("localVideo");try{n.srcObject=e}catch(o){n.src=window.URL.createObjectURL(e)}n.play(),pc2.addStream(e)},function(e){console.log("Error adding stream to pc2: "+e)}),$("#getRemoteOffer").modal("show")}),$("#offerSentBtn").click(function(){$("#getRemoteAnswer").modal("show")}),$("#offerRecdBtn").click(function(){var e=$("#remoteOffer").val(),n=new RTCSessionDescription(JSON.parse(e));console.log("Received remote offer",n),writeToChatLog("Received remote offer","text-success"),handleOfferFromPC1(n),$("#showLocalAnswer").modal("show")}),$("#answerSentBtn").click(function(){$("#waitForConnection").modal("show")}),$("#answerRecdBtn").click(function(){var e=$("#remoteAnswer").val();handleAnswerFromPC2(new RTCSessionDescription(JSON.parse(e))),$("#waitForConnection").modal("show")}),$("#fileBtn").change(function(){var e=this.files[0];console.log(e),sendFile(e)}),pc1.onicecandidate=function(e){console.log("ICE candidate (pc1)",e),$("#localOffer").html(JSON.stringify(e.srcElement.localDescription))},pc1.onaddstream=handleOnaddstream,pc1.onconnection=handleOnconnection,pc1.onsignalingstatechange=onsignalingstatechange,pc1.oniceconnectionstatechange=oniceconnectionstatechange,pc1.onicegatheringstatechange=onicegatheringstatechange;var pc2=new RTCPeerConnection(cfg,con),dc2=null,pc2icedone=!1;pc2.ondatachannel=function(e){var n=new FileReceiver,o=e.channel||e;console.log("Received datachannel (pc2)",arguments),dc2=o,activedc=dc2,dc2.onopen=function(e){console.log("data channel connect"),$("#waitForConnection").modal("hide"),$("#waitForConnection").remove()},dc2.onmessage=function(e){if(console.log("Got message (pc2)",e.data),e.data.size)n.receive(e.data,{});else{var o=JSON.parse(e.data);"file"===o.type?n.receive(e.data,{}):(writeToChatLog(o.message,"text-info"),$("#chatlog").scrollTop($("#chatlog")[0].scrollHeight))}}},pc2.onicecandidate=function(e){console.log("ICE candidate (pc2)",e),$("#localAnswer").html(JSON.stringify(e.srcElement.localDescription))},pc2.onsignalingstatechange=onsignalingstatechange,pc2.oniceconnectionstatechange=oniceconnectionstatechange,pc2.onicegatheringstatechange=onicegatheringstatechange,pc2.onaddstream=handleOnaddstream,pc2.onconnection=handleOnconnection;
+</script>
+</body>
+</html>
