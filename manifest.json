@@ -11,82 +11,10 @@
     "background_color" : "transparent",
     "related_applications" : "",
     "prefer_related_applications" : "false",
-    "generated" : "true",
+    "generated" : "undefined",
     "icons" : [
         {
             "src": "https://www.simpl.site/simpl.jpg",
-            "sizes": "44x44"
-        },
-        {
-            "src": "https://www.simpl.site/simpl.jpg",
-            "sizes": "48x48"
-        },
-        {
-            "src": "https://www.simpl.site/simpl.jpg",
-            "sizes": "1240x600"
-        },
-        {
-            "src": "https://www.simpl.site/simpl.jpg",
-            "sizes": "300x300"
-        },
-        {
-            "src": "https://www.simpl.site/simpl.jpg",
-            "sizes": "150x150"
-        },
-        {
-            "src": "https://www.simpl.site/simpl.jpg",
-            "sizes": "88x88"
-        },
-        {
-            "src": "https://www.simpl.site/simpl.jpg",
-            "sizes": "24x24"
-        },
-        {
-            "src": "https://www.simpl.site/simpl.jpg",
-            "sizes": "50x50"
-        },
-        {
-            "src": "https://www.simpl.site/simpl.jpg",
-            "sizes": "620x300"
-        },
-        {
-            "src": "https://www.simpl.site/simpl.jpg",
-            "sizes": "192x192"
-        },
-        {
-            "src": "https://www.simpl.site/simpl.jpg",
-            "sizes": "144x144"
-        },
-        {
-            "src": "https://www.simpl.site/simpl.jpg",
-            "sizes": "96x96"
-        },
-        {
-            "src": "https://www.simpl.site/simpl.jpg",
-            "sizes": "72x72"
-        },
-        {
-            "src": "https://www.simpl.site/simpl.jpg",
-            "sizes": "36x36"
-        },
-        {
-            "src": "https://www.simpl.site/simpl.jpg",
-            "sizes": "1024x1024"
-        },
-        {
-            "src": "https://www.simpl.site/simpl.jpg",
-            "sizes": "180x180"
-        },
-        {
-            "src": "https://www.simpl.site/simpl.jpg",
-            "sizes": "152x152"
-        },
-        {
-            "src": "https://www.simpl.site/simpl.jpg",
-            "sizes": "120x120"
-        },
-        {
-            "src": "https://www.simpl.site/simpl.jpg",
-            "sizes": "76x76"
+            "sizes": "512x512"
         }
     ]}
