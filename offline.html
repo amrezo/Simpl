@@ -175,6 +175,47 @@
   </g>
   </svg>
 </div>
+<div onclick="toggleStartStop();" style="width: 3.5rem; height: 4rem; position: absolute; bottom: 5rem; left: 1rem; z-index: 10; cursor: pointer;">
+  <svg version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+  	 viewBox="0 0 512 512" style="enable-background:new 0 0 512 512;" xml:space="preserve">
+  <g>
+  	<g>
+  		<path d="M0,86v340h512V86H0z M70,266h252v30H70V266z M160,356H70v-30h90V356z M442,356H190v-30h252V356z M442,296h-90v-30h90V296z
+  			"/>
+  	</g>
+  </g>
+  <g>
+  </g>
+  <g>
+  </g>
+  <g>
+  </g>
+  <g>
+  </g>
+  <g>
+  </g>
+  <g>
+  </g>
+  <g>
+  </g>
+  <g>
+  </g>
+  <g>
+  </g>
+  <g>
+  </g>
+  <g>
+  </g>
+  <g>
+  </g>
+  <g>
+  </g>
+  <g>
+  </g>
+  <g>
+  </g>
+  </svg>
+</div>
 
 <div class="messageBox">
   <fieldset class="well">
@@ -343,6 +384,52 @@
 <script src="file-transfer.js"></script> -->
 <script>
   function FileReceiver(){function e(e,c){if(moz)if(e.size){var i=new window.FileReader;i.readAsDataURL(e),i.onload=function(e){FileSaver.SaveToDisk(e.target.result,o),c.onFileReceived&&c.onFileReceived(o)}}else{var r=JSON.parse(e);r.fileName&&(o=r.fileName)}moz||(e.packets&&(a=t=parseInt(e.packets)),c.onFileProgress&&c.onFileProgress({remaining:t--,length:a,received:a-t}),n.push(e.message),e.last&&(FileSaver.SaveToDisk(n.join(""),e.name),c.onFileReceived&&c.onFileReceived(e.name),n=[]))}var n=[],o="",t=0,a=0;return{receive:e}}function readURL(e){if(e.files&&e.files[0]){var n=new FileReader;n.onload=function(e){$("#remoteOfferImg").attr("src",e.target.result)},n.readAsDataURL(e.files[0])}}function readURL2(e){if(e.files&&e.files[0]){var n=new FileReader;n.onload=function(e){$("#remoteAnswerImg").attr("src",e.target.result)},n.readAsDataURL(e.files[0])}}function fileSent(e){console.log(e+" sent")}function fileProgress(e){console.log(e+" progress")}function sendFile(e){e.size&&FileSender.send({file:e,onFileSent:fileSent,onFileProgress:fileProgress})}function sendMessage(){if($("#messageTextBox").val()){var e=new RTCMultiSession;writeToChatLog($("#messageTextBox").val(),"text-success"),e.send({message:$("#messageTextBox").val()}),$("#messageTextBox").val(""),$("#chatlog").scrollTop($("#chatlog")[0].scrollHeight)}return!1}function setupDC1(){try{var e=new FileReceiver;dc1=pc1.createDataChannel("test",{reliable:!0}),activedc=dc1,console.log("Created datachannel (pc1)"),dc1.onopen=function(e){console.log("data channel connect"),$("#waitForConnection").modal("hide"),$("#waitForConnection").remove()},dc1.onmessage=function(n){if(console.log("Got message (pc1)",n.data),n.data.size)e.receive(n.data,{});else{if(2==n.data.charCodeAt(0))return;console.log(n);var o=JSON.parse(n.data);"file"===o.type?e.receive(n.data,{}):(writeToChatLog(o.message,"text-info"),$("#chatlog").scrollTop($("#chatlog")[0].scrollHeight))}}}catch(e){console.warn("No data channel (pc1)",e)}}function createLocalOffer(){console.log("video1"),navigator.getUserMedia=navigator.getUserMedia||navigator.webkitGetUserMedia||navigator.mozGetUserMedia||navigator.msGetUserMedia,navigator.getUserMedia({video:!0,audio:!0},function(e){var n=document.getElementById("localVideo");try{n.srcObject=e}catch(o){n.src=window.URL.createObjectURL(e)}n.play(),pc1.addStream(e),console.log(e),console.log("adding stream to pc1"),setupDC1(),pc1.createOffer(function(e){pc1.setLocalDescription(e,function(){},function(){}),console.log("created local offer",e)},function(){console.warn("Couldn't create offer")},sdpConstraints)},function(e){console.log("Error adding stream to pc1: "+e)})}function handleOnaddstream(e){console.log("Got remote stream",e.stream);var n=document.getElementById("remoteVideo");n.autoplay=!0,attachMediaStream(n,e.stream)}function handleOnconnection(){console.log("Datachannel connected"),writeToChatLog("Datachannel connected","text-success"),$("#waitForConnection").modal("hide"),$("#waitForConnection").remove(),$("#showLocalAnswer").modal("hide"),$("#messageTextBox").focus()}function onsignalingstatechange(e){console.info("signaling state change:",e)}function oniceconnectionstatechange(e){console.info("ice connection state change:",e)}function onicegatheringstatechange(e){console.info("ice gathering state change:",e)}function handleAnswerFromPC2(e){console.log("Received remote answer: ",e),writeToChatLog("Received remote answer","text-success"),pc1.setRemoteDescription(e)}function handleCandidateFromPC2(e){pc1.addIceCandidate(e)}function handleOfferFromPC1(e){pc2.setRemoteDescription(e),pc2.createAnswer(function(e){writeToChatLog("Created local answer","text-success"),console.log("Created local answer: ",e),pc2.setLocalDescription(e)},function(){console.warn("Couldn't create offer")},sdpConstraints)}function handleCandidateFromPC1(e){pc2.addIceCandidate(e)}function getTimestamp(){var e=(new Date).getTime()/1e3,n=parseInt(e/3600)%24,o=parseInt(e/60)%60,t=parseInt(e%60);return(n<10?"0"+n:n)+":"+(o<10?"0"+o:o)+":"+(t<10?"0"+t:t)}function writeToChatLog(e,n){document.getElementById("chatlog").innerHTML+='<p class="'+n+'">['+getTimestamp()+"] "+e+"</p>"}window.moz=!!navigator.mozGetUserMedia;var RTCMultiSession=function(e){return{send:function(e){moz&&e.file?data=e.file:data=JSON.stringify(e),activedc.send(data)}}},FileSender={send:function(e){function n(a,l){var d={type:"file"};a&&(l=a.target.result,r=s=d.packets=parseInt(l.length/c)),e.onFileProgress&&e.onFileProgress({remaining:s--,length:r,sent:r-s}),l.length>c?d.message=l.slice(0,c):(d.message=l,d.last=!0,d.name=t.name,e.onFileSent&&e.onFileSent(t)),o.send(d),i=l.slice(d.message.length),i.length&&setTimeout(function(){n(null,i)},500)}var o=e.channel||new RTCMultiSession,t=e.file;if(moz&&(o.send({fileName:t.name,type:"file"}),o.send({file:t}),e.onFileSent&&e.onFileSent(t)),!moz){var a=new window.FileReader;a.readAsDataURL(t),a.onload=n}var c=1e3,i="",r=0,s=0}},FileSaver={SaveToDisk:function(e,n){var o=document.createElement("a");o.href=e,o.target="_blank",o.download=n||e;var t=new MouseEvent("click",{view:window,bubbles:!0,cancelable:!0});o.dispatchEvent(t),(window.URL||window.webkitURL).revokeObjectURL(o.href)}},offerString,answerString,encodedOfferSrc,encodedAnswerSrc,decodedOfferSrc,decodedAnswerSrc,decodedOffer,decodedAnswer="",cfg={iceServers:[{url:"stun:23.21.150.121"}]},con={optional:[{DtlsSrtpKeyAgreement:!0}]},pc1=new RTCPeerConnection(cfg,con),dc1=null,tn1=null,activedc,pc1icedone=!1,sdpConstraints={optional:[],mandatory:{OfferToReceiveAudio:!0,OfferToReceiveVideo:!0}};$("#showLocalOffer").modal("hide"),$("#getRemoteAnswer").modal("hide"),$("#waitForConnection").modal("hide"),$("#createOrJoin").modal("show"),$("#createBtn").click(function(){$("#createOrJoin").modal("hide"),$("#showLocalOffer").modal("show"),createLocalOffer()}),$("#joinBtn").click(function(){navigator.getUserMedia=navigator.getUserMedia||navigator.webkitGetUserMedia||navigator.mozGetUserMedia||navigator.msGetUserMedia,navigator.getUserMedia({video:!0,audio:!0},function(e){var n=document.getElementById("localVideo");try{n.srcObject=e}catch(o){n.src=window.URL.createObjectURL(e)}n.play(),pc2.addStream(e)},function(e){console.log("Error adding stream to pc2: "+e)}),$("#getRemoteOffer").modal("show")}),$("#offerSentBtn").click(function(){$("#getRemoteAnswer").modal("show")}),$("#offerRecdBtn").click(function(){var e=decodedOffer,n=new RTCSessionDescription(JSON.parse(e));console.log("Received remote offer",n),writeToChatLog("Received remote offer","text-success"),handleOfferFromPC1(n),$("#showLocalAnswer").modal("show")}),$("#remoteOfferImg").on("load",function(){decodedOffer=steg.decode($("#remoteOfferImg")[0]),$("#offerRecdBtn").prop("disabled",!1)}),$("#remoteAnswerImg").on("load",function(){decodedAnswer=steg.decode($("#remoteAnswerImg")[0]),$("#answerRecdBtn").prop("disabled",!1)}),$("#remoteOfferFile").change(function(){readURL(this)}),$("#remoteAnswerFile").change(function(){readURL2(this)}),$("#answerSentBtn").click(function(){$("#waitForConnection").modal("show")}),$("#answerRecdBtn").click(function(){var e=decodedAnswer;handleAnswerFromPC2(new RTCSessionDescription(JSON.parse(e))),$("#waitForConnection").modal("show")}),$("#fileBtn").change(function(){var e=this.files[0];console.log(e),sendFile(e)}),pc1.onicecandidate=function(e){console.log("ICE candidate (pc1)",e),$("#localOffer").html(JSON.stringify(e.srcElement.localDescription)),offerString=$("#localOffer").val(),encodedOfferSrc=steg.encode(offerString,document.getElementById("offer")),$("#encodedOfferImage").attr("src",encodedOfferSrc)},pc1.onaddstream=handleOnaddstream,pc1.onconnection=handleOnconnection,pc1.onsignalingstatechange=onsignalingstatechange,pc1.oniceconnectionstatechange=oniceconnectionstatechange,pc1.onicegatheringstatechange=onicegatheringstatechange;var pc2=new RTCPeerConnection(cfg,con),dc2=null,pc2icedone=!1;pc2.ondatachannel=function(e){var n=new FileReceiver,o=e.channel||e;console.log("Received datachannel (pc2)",arguments),dc2=o,activedc=dc2,dc2.onopen=function(e){console.log("data channel connect"),$("#waitForConnection").modal("hide"),$("#waitForConnection").remove()},dc2.onmessage=function(e){if(console.log("Got message (pc2)",e.data),e.data.size)n.receive(e.data,{});else{var o=JSON.parse(e.data);"file"===o.type?n.receive(e.data,{}):(writeToChatLog(o.message,"text-info"),$("#chatlog").scrollTop($("#chatlog")[0].scrollHeight))}}},pc2.onicecandidate=function(e){console.log("ICE candidate (pc2)",e),$("#localAnswer").html(JSON.stringify(e.srcElement.localDescription)),answerString=$("#localAnswer").val(),encodedAnswerSrc=steg.encode(answerString,document.getElementById("answer")),$("#encodedAnswerImage").attr("src",encodedAnswerSrc)},pc2.onsignalingstatechange=onsignalingstatechange,pc2.oniceconnectionstatechange=oniceconnectionstatechange,pc2.onicegatheringstatechange=onicegatheringstatechange,pc2.onaddstream=handleOnaddstream,pc2.onconnection=handleOnconnection;
+</script>
+
+<div id="caption" class="btn btn-primary" style="padding: 1rem; box-shadow: rgba(156, 172, 172, 0.2) 0px 2px 2px, rgba(156, 172, 172, 0.2) 0px 4px 4px, rgba(156, 172, 172, 0.2) 0px 8px 8px, rgba(156, 172, 172, 0.2) 0px 16px 16px, rgba(156, 172, 172, 0.2) 0px 32px 32px, rgba(156, 172, 172, 0.2) 0px 64px 64px;position: absolute;top: 2rem;left: 2rem; z-index: 10; max-width: 50%; text-align: left;">
+  <span id="final_span"></span>
+  <span id="interim_span" style="color:lightblue"></span>
+</div>
+
+<script type="text/javascript">
+  var recognizing;
+  var recognition = new webkitSpeechRecognition();
+  recognition.continuous = true;
+  recognition.interimResults = true;
+  reset();
+  recognition.onend = reset;
+
+  recognition.onresult = function (event) {
+    var final = "";
+    var interim = "";
+    for (var i = 0; i < event.results.length; ++i) {
+      if (event.results[i].isFinal) {
+        final += event.results[i][0].transcript;
+      } else {
+        interim += event.results[i][0].transcript;
+      }
+    }
+    document.getElementById("caption").hidden = false;
+    final_span.innerHTML = final;
+    interim_span.innerHTML = interim;
+  }
+
+  function reset() {
+    recognizing = false;
+    document.getElementById("caption").hidden = true;
+  }
+
+  function toggleStartStop() {
+    if (recognizing) {
+      recognition.stop();
+      reset();
+    } else {
+      recognition.start();
+      recognizing = true;
+      final_span.innerHTML = "";
+      interim_span.innerHTML = "";
+    }
+  }
 </script>
 
 </body>
